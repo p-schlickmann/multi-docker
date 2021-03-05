@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mendespedro/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mendespedro/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t mendespedro/multi-client ./client
+  - docker build -t mendespedro/multi-nginx ./nginx
+  - docker build -t mendespedro/multi-server ./server
+  - docker build -t mendespedro/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push mendespedro/multi-client
+  - docker push mendespedro/multi-nginx
+  - docker push mendespedro/multi-server
+  - docker push mendespedro/multi-worker
